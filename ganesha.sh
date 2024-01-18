@@ -118,6 +118,10 @@ modify_config() {
             read -ep "输入客户端 IP 范围: (e.g. 192.168.1.0/24)" IP_RANGE
             read -ep "输入客户端 Squash 类型 (All, None, Root): " CLIENT_SQUASH
             read -ep "输入客户端权限: (RW, RO, None) " CLIENT_PERM
+            if [[ -z "${IP_RANGE}" || -z "${CLIENT_SQUASH}" || -z "${CLIENT_PERM}" ]]; then
+                echo -e "${red}所有选项都不能为空${plain}"
+                return 1
+            fi
             if [[ -z "${CLIENT_NUM}" ]]; then
                 CLIENT_NUM=1
             fi
@@ -142,6 +146,10 @@ CLIENT
                     read -ep "输入客户端 IP 范围: (例如 192.168.1.0/24)" IP_RANGE_EXTRA
                     read -ep "输入客户端 Squash 类型 (All, None, Root): " CLIENT_SQUASH_EXTRA
                     read -ep "输入客户端权限: (RW, RO, None) " CLIENT_PERM_EXTRA
+                    if [[ -z "${IP_RANGE_EXTRA}" || -z "${CLIENT_SQUASH_EXTRA}" || -z "${CLIENT_PERM_EXTRA}" ]]; then
+                        echo -e "${red}所有选项都不能为空${plain}"
+                        return 1
+                    fi
                     ((CLIENT_NUM++))
                     CLIENT_EXTRA="
 ### BEGIN CLIENT $CLIENT_NUM

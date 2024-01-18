@@ -140,8 +140,8 @@ CLIENT
                 while [[ "${ADD_CONFIG}" -eq 1 ]]; do
                     echo -e "请输入以下 EXPORT 客户端配置"
                     read -ep "输入客户端 IP 范围: (例如 192.168.1.0/24)" IP_RANGE_EXTRA
-                    read -ep "输入客户端 Squash 类型 (All, None): " CLIENT_SQUASH_EXTRA
-                    read -ep "输入客户端权限: (RW, RO) " CLIENT_PERM_EXTRA
+                    read -ep "输入客户端 Squash 类型 (All, None, Root): " CLIENT_SQUASH_EXTRA
+                    read -ep "输入客户端权限: (RW, RO, None) " CLIENT_PERM_EXTRA
                     ((CLIENT_NUM++))
                     CLIENT_EXTRA="
 ### BEGIN CLIENT $CLIENT_NUM
@@ -180,7 +180,7 @@ ${CLIENT_EXTRA}"
                 echo "结束客户端配置"
             ;;
             esac
-            EXPORT_CFG="
+            export EXPORT_CFG="
 ## BEGIN EXPORT $EXPORT_NUM
 EXPORT
 {

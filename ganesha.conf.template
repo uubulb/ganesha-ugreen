@@ -1,0 +1,32 @@
+NFS_CORE_PARAM {
+	mount_path_pseudo = true;
+
+	Protocols = 3,4;
+}
+
+EXPORT_DEFAULTS {
+	Access_Type = RW;
+}
+
+#MDCACHE {
+	#Entries_HWMark = 100000;
+#}
+
+# BEGIN EXPORT
+
+# END EXPORT
+
+LOG {
+	Default_Log_Level = WARN;
+
+	Components {
+		FSAL = INFO;
+		NFS4 = WARN;
+	}
+
+	Facility {
+		name = FILE;
+		destination = "/opt/var/log/ganesha.log";
+		enable = active;
+	}
+}

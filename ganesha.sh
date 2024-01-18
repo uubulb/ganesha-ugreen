@@ -44,8 +44,8 @@ install() {
         echo -e "${yellow}安装成功！开始配置。${plain}"
         modify_config
         echo -e "${yellow}配置过程结束，下载服务文件并启动 nfs-ganesha${plain}"
-        wget -qO /opt/etc/ganesha/S80ganesha ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/S80ganesha
-        chmod +x /opt/etc/ganesha/S80ganesha && ln -s /opt/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+        wget -qO $INSTALL_DIR/etc/ganesha/S80ganesha ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/S80ganesha
+        chmod +x $INSTALL_DIR/etc/ganesha/S80ganesha && ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
         /etc/init.d/S80ganesha enable && /etc/init.d/S80ganesha start
         echo -e "${green}nfs-ganesha 已成功启动${plain}"
     else
@@ -77,14 +77,14 @@ modify_config() {
         FRESH_INSTALL=1
     fi
     if [[ ! $FRESH_INSTALL == 1 ]]; then
-        local EXPORT_COUNT=$(sed -n '/# BEGIN EXPORT/,/# END EXPORT/p' /opt/etc/ganesha/ganesha.conf | grep "## BEGIN EXPORT" | tail -n 1 | awk '{print $NF}')
+        local EXPORT_COUNT=$(sed -n '/# BEGIN EXPORT/,/# END EXPORT/p' $INSTALL_DIR/etc/ganesha/ganesha.conf | grep "## BEGIN EXPORT" | tail -n 1 | awk '{print $NF}')
         if [ -z "$EXPORT_COUNT" ]; then
             local EXPORT_COUNT=0
         fi
         echo -e "已找到配置 ${green}$EXPORT_COUNT${plain} 个"
     else
         echo "下载配置模板……"
-        wget -qO /opt/etc/ganesha/ganesha.conf.template ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/ganesha.conf.template
+        wget -qO $INSTALL_DIR/etc/ganesha/ganesha.conf.template ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/ganesha.conf.template
     fi
     echo -e "
     ${yellow}请选择操作：${plain}
@@ -214,13 +214,13 @@ EXPORT
 }
 ## END EXPORT $EXPORT_NUM
 "
-        awk '{gsub(/# END EXPORT/, ENVIRON["EXPORT_CFG"] "\n# END EXPORT")}1' /opt/etc/ganesha/ganesha.conf.template > /opt/etc/ganesha/ganesha.conf
+        awk '{gsub(/# END EXPORT/, ENVIRON["EXPORT_CFG"] "\n# END EXPORT")}1' $INSTALL_DIR/etc/ganesha/ganesha.conf.template > $INSTALL_DIR/etc/ganesha/ganesha.conf
         echo -e "${green}已成功创建 EXPORT #${EXPORT_NUM}${plain}"
         ;;
         2)
             read -ep "输入需要删除的 EXPORT 序号 (忘了的话，请手动查看配置) : " DELETE_NUM
-            sed -e "/## BEGIN EXPORT $DELETE_NUM/,/## END EXPORT $DELETE_NUM/d" /opt/etc/ganesha/ganesha.conf > /tmp/ganesha.conf.tmp
-            mv /tmp/ganesha.conf.tmp /opt/etc/ganesha/ganesha.conf
+            sed -e "/## BEGIN EXPORT $DELETE_NUM/,/## END EXPORT $DELETE_NUM/d" $INSTALL_DIR/etc/ganesha/ganesha.conf > /tmp/ganesha.conf.tmp
+            mv /tmp/ganesha.conf.tmp $INSTALL_DIR/etc/ganesha/ganesha.conf
             echo -e "已删除 EXPORT #$DELETE_NUM"
         ;;
         *)
@@ -231,13 +231,21 @@ EXPORT
 
 uninstall() {
     echo -e "${yellow}开始卸载nfs-ganesha${plain}"
-    if [ -f /opt/var/run/ganesha/ganesha.pid ]; then
+    if [[ -f $INSTALL_DIR/var/run/ganesha/ganesha.pid ]]; then
         /etc/init.d/S80ganesha stop
     else
         kill -9 $(ps aux | grep '[g]anesha.nfsd' | awk '{print $2}') >/dev/null 2>&1
     fi
     echo -e "$INSTALL_DIR/lib/pkgconfig/libntirpc.pc\n$INSTALL_DIR/lib/ganesha/\n$INSTALL_DIR/lib/libacl.so.1\n$INSTALL_DIR/lib/liburcu-bp.so.8\n$INSTALL_DIR/lib/libganesha_nfsd.so.5.7\n$INSTALL_DIR/lib/libntirpc.so.5.0\n$INSTALL_DIR/lib/libganesha_nfsd.so\n$INSTALL_DIR/lib/libntirpc.so\n$INSTALL_DIR/bin/ganesha.nfsd\n$INSTALL_DIR/etc/ganesha/\n$INSTALL_DIR/include/ntirpc/\n/etc/init.d/S80ganesha\n$INSTALL_DIR/var/run/ganesha/\n$INSTALL_DIR/var/log/ganesha.log" | xargs rm -rf
     echo -e "${yellow}卸载过程结束${plain}"
+}
+
+stop() {
+    if [[ -f $INSTALL_DIR/var/run/ganesha/ganesha.pid ]]; then
+        /etc/init.d/S80ganesha stop
+    else
+        kill -9 $(ps aux | grep '[g]anesha.nfsd' | awk '{print $2}') >/dev/null 2>&1
+    fi
 }
 
 show_menu() {
@@ -270,23 +278,25 @@ show_menu() {
         4)
             if [ -f /etc/init.d/S80ganesha ]; then
                 /etc/init.d/S80ganesha start
+            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha && ! -f /etc/init.d/S80ganesha ]]
+                ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                /etc/init.d/S80ganesha start
             else
                 echo -e "${red}您似乎还没有安装 nfs-ganesha${plain}"
             fi
         ;;
         5)
             if [ -f /etc/init.d/S80ganesha ]; then
-                if [ -f /opt/var/run/ganesha/ganesha.pid ]; then
-                    /etc/init.d/S80ganesha stop
-                else
-                    kill -9 $(ps aux | grep '[g]anesha.nfsd' | awk '{print $2}') >/dev/null 2>&1
-                fi
+                stop
+            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha && ! -f /etc/init.d/S80ganesha ]]
+                ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                stop
             else
                 echo -e "${red}您似乎还没有安装 nfs-ganesha${plain}"
             fi
         ;;
         6)
-            less /opt/etc/ganesha/ganesha.conf
+            less $INSTALL_DIR/etc/ganesha/ganesha.conf
         ;;
         *)
             echo -e "${red}请输入正确的数字 [0-6]${plain}"

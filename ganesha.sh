@@ -278,7 +278,7 @@ show_menu() {
         4)
             if [ -f /etc/init.d/S80ganesha ]; then
                 /etc/init.d/S80ganesha start
-            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha && ! -f /etc/init.d/S80ganesha ]]
+            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [ ! -f /etc/init.d/S80ganesha ]; then
                 ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
                 /etc/init.d/S80ganesha start
             else
@@ -288,7 +288,7 @@ show_menu() {
         5)
             if [ -f /etc/init.d/S80ganesha ]; then
                 stop
-            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha && ! -f /etc/init.d/S80ganesha ]]
+            elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [-f /etc/init.d/S80ganesha ]; then
                 ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
                 stop
             else

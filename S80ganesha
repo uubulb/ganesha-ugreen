@@ -10,11 +10,6 @@ start() {
 }
  
 stop() {
-        if [ -f /opt/etc/ganesha/ganesha.conf ]; then                    
-          rm /opt/etc/ganesha/ganesha.conf
-          else                                                      
-          echo "File does not exist."                                       
-        fi
         LD_LIBRARY_PATH=/usr/lib:/opt/lib service_stop $PROG
 }
 

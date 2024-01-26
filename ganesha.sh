@@ -12,6 +12,16 @@ INSTALL_DIR=/opt
 GITHUB_URL=https://hub.fgit.cf
 GITHUB_RAW_URL=https://raw.fgit.cf
 
+update_script() {
+    echo "正在更新脚本"
+    wget -qO /tmp/ganesha.sh $GITHUB_RAW_URL/uubulb/ganesha-ugreen/main/ganesha.sh
+    mv -f /tmp/ganesha.sh ./ganesha.sh && chmod a+x ./ganesha.sh
+    echo -e "3s后执行新脚本"
+    sleep 3s
+    clear
+    exec ./ganesha.sh
+    exit 0
+}
 
 install() {
     echo "正在安装 nfs-ganesha"
@@ -56,11 +66,11 @@ install() {
 preconfig() {
     DISK_COUNT=$(ls /mnt/media_rw | sed 's|^|/mnt/media_rw/|' | wc -l)
     for ((num = 1; num <= DISK_COUNT; num++)); do
-        find /mnt/media_rw | sed '1d' | head -n $num | tail -n 1 | xargs readlink >> /tmp/diskcount.txt
+        find /mnt/media_rw | sed '1d' | sed -n "${num}p" | xargs readlink >> /tmp/diskcount.txt
     done
     for ((num = 1; num <= DISK_COUNT; num++)); do
-        local DISK_NAME=$(sed -n '/######### Dynamic written config options #########/,${p;/#########/d}' /etc/samba/smb.conf | grep "\[" | head -n $num | tail -n 1 | awk -F'[][]' '/\[.*\]/{sub("^[^_]+_", "", $2); print $2}')
-        local INTERNAL_NAME=$(sed -n '/######### Dynamic written config options #########/,${p;/#########/d}' /etc/samba/smb.conf | grep path | head -n $num | tail -n 1 | awk -F'/' '/path/{sub("^.*dm-", "", $4); print $3}')
+        local DISK_NAME=$(sed -n '/######### Dynamic written config options #########/,${p;/#########/d}' /etc/samba/smb.conf | grep "\[" | sed -n "${num}p" | awk -F'[][]' '/\[.*\]/{sub("^[^_]+_", "", $2); print $2}')
+        local INTERNAL_NAME=$(sed -n '/######### Dynamic written config options #########/,${p;/#########/d}' /etc/samba/smb.conf | grep path | sed -n "${num}p" | awk -F'/' '/path/{sub("^.*dm-", "", $4); print $3}')
         eval "$DISK_NAME=$INTERNAL_NAME"
     done
     DISK_LIST=$(sed -n '/######### Dynamic written config options #########/,${p;/#########/d}' /etc/samba/smb.conf | grep "\[" | awk -F'[][]' '/\[.*\]/{sub("^[^_]+_", "", $2); print $2}' | tr '\n' ' ')
@@ -258,9 +268,10 @@ show_menu() {
     ${yellow}4.${plain}  启动 nfs-ganesha
     ${yellow}5.${plain}  关闭 nfs-ganesha
     ${yellow}6.${plain}  查看配置
+    ${yellow}7.${plain}  更新脚本
     ${yellow}0.${plain}  退出脚本
     "
-    echo && read -ep "请输入选择 [0-6]: " num
+    echo && read -ep "请输入选择 [0-7]: " num
     
     case "${num}" in
         0)
@@ -298,8 +309,11 @@ show_menu() {
         6)
             less $INSTALL_DIR/etc/ganesha/ganesha.conf
         ;;
+        7)
+            update_script
+        ;;
         *)
-            echo -e "${red}请输入正确的数字 [0-6]${plain}"
+            echo -e "${red}请输入正确的数字 [0-7]${plain}"
         ;;
     esac
 }

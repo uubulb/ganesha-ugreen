@@ -12,9 +12,9 @@ EXPORT_DEFAULTS {
 	#Entries_HWMark = 100000;
 #}
 
-# BEGIN EXPORT
+#! BEGIN EXPORT
 
-# END EXPORT
+#! END EXPORT
 
 LOG {
 	Default_Log_Level = WARN;

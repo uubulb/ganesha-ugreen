@@ -88,7 +88,7 @@ modify_config() {
         FRESH_INSTALL=1
     fi
     if [[ ! $FRESH_INSTALL == 1 ]]; then
-        local EXPORT_COUNT=$(sed -n '/# BEGIN EXPORT/,/# END EXPORT/p' $INSTALL_DIR/etc/ganesha/ganesha.conf | grep "## BEGIN EXPORT" | tail -n 1 | awk '{print $NF}')
+        EXPORT_COUNT=$(sed -n '/# BEGIN EXPORT/,/# END EXPORT/p' $INSTALL_DIR/etc/ganesha/ganesha.conf | grep "## BEGIN EXPORT" | wc -l)
         if [ -z "$EXPORT_COUNT" ]; then
             local EXPORT_COUNT=0
         fi
@@ -225,14 +225,69 @@ EXPORT
 }
 ## END EXPORT $EXPORT_NUM
 "
-        awk '{gsub(/# END EXPORT/, ENVIRON["EXPORT_CFG"] "\n# END EXPORT")}1' $INSTALL_DIR/etc/ganesha/ganesha.conf.template > $INSTALL_DIR/etc/ganesha/ganesha.conf
-        echo -e "${green}已成功创建 EXPORT #${EXPORT_NUM}${plain}"
+            if [[ $EXPORT_COUNT == 0 ]]; then
+                awk '{gsub(/#! END EXPORT/, ENVIRON["EXPORT_CFG"] "\n#! END EXPORT")}1' $INSTALL_DIR/etc/ganesha/ganesha.conf.template > $INSTALL_DIR/etc/ganesha/ganesha.conf
+            else
+                awk '{gsub(/#! END EXPORT/, ENVIRON["EXPORT_CFG"] "\n#! END EXPORT")}1' $INSTALL_DIR/etc/ganesha/ganesha.conf > /tmp/ganesha.conf.tmp
+                mv /tmp/ganesha.conf.tmp $INSTALL_DIR/etc/ganesha/ganesha.conf
+            fi
+            echo -e "${green}已成功创建 EXPORT #${EXPORT_NUM}${plain}"
+            read -e -r -p "配置需要重启nfs-ganesha后生效，是否现在重启? [Y/n]" input
+            case $input in
+            [yY][eE][sS] | [yY])
+                if [ -f /etc/init.d/S80ganesha ]; then
+                    /etc/init.d/S80ganesha restart
+                elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [ ! -f /etc/init.d/S80ganesha ]; then
+                    ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                    /etc/init.d/S80ganesha restart
+                fi
+                exit 0
+            ;;
+            [nN][oO] | [nN])
+                echo -e "${yellow}稍后如需重启，请在脚本菜单中选择先关闭再启动${plain}"
+                exit 0
+            ;;
+            *)
+                if [ -f /etc/init.d/S80ganesha ]; then
+                    /etc/init.d/S80ganesha restart
+                elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [ ! -f /etc/init.d/S80ganesha ]; then
+                    ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                    /etc/init.d/S80ganesha restart
+                fi
+                exit 0
+            ;;
+            esac
         ;;
         2)
             read -ep "输入需要删除的 EXPORT 序号 (忘了的话，请手动查看配置) : " DELETE_NUM
             sed -e "/## BEGIN EXPORT $DELETE_NUM/,/## END EXPORT $DELETE_NUM/d" $INSTALL_DIR/etc/ganesha/ganesha.conf > /tmp/ganesha.conf.tmp
             mv /tmp/ganesha.conf.tmp $INSTALL_DIR/etc/ganesha/ganesha.conf
             echo -e "已删除 EXPORT #$DELETE_NUM"
+            read -e -r -p "配置需要重启nfs-ganesha后生效，是否现在重启? [Y/n]" input
+            case $input in
+            [yY][eE][sS] | [yY])
+                if [ -f /etc/init.d/S80ganesha ]; then
+                    /etc/init.d/S80ganesha restart
+                elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [ ! -f /etc/init.d/S80ganesha ]; then
+                    ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                    /etc/init.d/S80ganesha restart
+                fi
+                exit 0
+            ;;
+            [nN][oO] | [nN])
+                echo -e "${yellow}稍后如需重启，请在脚本菜单中选择先关闭再启动${plain}"
+                exit 0
+            ;;
+            *)
+                if [ -f /etc/init.d/S80ganesha ]; then
+                    /etc/init.d/S80ganesha restart
+                elif [[ -f $INSTALL_DIR/etc/ganesha/S80ganesha ]] && [ ! -f /etc/init.d/S80ganesha ]; then
+                    ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
+                    /etc/init.d/S80ganesha restart
+                fi
+                exit 0
+            ;;
+            esac
         ;;
         *)
             echo -e "${red}请输入正确的数字 [0-2]${plain}"

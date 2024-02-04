@@ -9,12 +9,13 @@ exit_status=$?
 
 INSTALL_DIR=/opt
 
-GITHUB_URL=https://hub.fgit.cf
-GITHUB_RAW_URL=https://raw.fgit.cf
+GITHUB_URL=https://github.com
+GITHUB_RAW_URL=https://raw.githubusercontent.com
+GITHUB_PROXY=https://mirror.ghproxy.com/
 
 update_script() {
     echo "正在更新脚本"
-    wget -qO /tmp/ganesha.sh $GITHUB_RAW_URL/uubulb/ganesha-ugreen/main/ganesha.sh
+    wget -qO /tmp/ganesha.sh ${GITHUB_PROXY}$GITHUB_RAW_URL/uubulb/ganesha-ugreen/main/ganesha.sh
     mv -f /tmp/ganesha.sh ./ganesha.sh && chmod a+x ./ganesha.sh
     echo -e "3s后执行新脚本"
     sleep 3s
@@ -47,14 +48,14 @@ install() {
     elif [[ $(uname -m | grep 'aarch64\|armv8b\|armv8l') != "" ]]; then
         os_arch="arm64"
     fi
-    DOWNLOAD_URL=${GITHUB_URL}/uubulb/ganesha-ugreen/releases/download/binary/nfs-ganesha_5.7_${os_arch}.tar.gz
+    DOWNLOAD_URL=${GITHUB_PROXY}${GITHUB_URL}/uubulb/ganesha-ugreen/releases/download/binary/nfs-ganesha_5.7_${os_arch}.tar.gz
     wget -qO- $DOWNLOAD_URL | tar -C $INSTALL_DIR -xzf -
     mkdir -p $INSTALL_DIR/var/run/ganesha
     if [ $exit_status -eq 0 ]; then
         echo -e "${yellow}安装成功！开始配置。${plain}"
         modify_config
         echo -e "${yellow}配置过程结束，下载服务文件并启动 nfs-ganesha${plain}"
-        wget -qO $INSTALL_DIR/etc/ganesha/S80ganesha ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/S80ganesha
+        wget -qO $INSTALL_DIR/etc/ganesha/S80ganesha ${GITHUB_PROXY}${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/S80ganesha
         chmod +x $INSTALL_DIR/etc/ganesha/S80ganesha && ln -s $INSTALL_DIR/etc/ganesha/S80ganesha /etc/init.d/S80ganesha
         /etc/init.d/S80ganesha enable && /etc/init.d/S80ganesha start
         echo -e "${green}nfs-ganesha 已成功启动${plain}"
@@ -94,7 +95,7 @@ modify_config() {
         echo -e "已找到配置 ${green}$EXPORT_COUNT${plain} 个"
     else
         echo "下载配置模板……"
-        wget -qO $INSTALL_DIR/etc/ganesha/ganesha.conf.template ${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/ganesha.conf.template
+        wget -qO $INSTALL_DIR/etc/ganesha/ganesha.conf.template ${GITHUB_PROXY}${GITHUB_RAW_URL}/uubulb/ganesha-ugreen/main/ganesha.conf.template
     fi
     echo -e "
     ${yellow}请选择操作：${plain}

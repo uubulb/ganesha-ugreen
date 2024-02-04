@@ -2,7 +2,7 @@
 
 #### How to run:
 ```
-curl -L https://raw.fgit.cf/uubulb/ganesha-ugreen/main/ganesha.sh -o ganesha.sh && bash ./ganesha.sh
+curl -L https://mirror.ghproxy.com/https://raw.githubusercontent.com/uubulb/ganesha-ugreen/main/ganesha.sh -o ganesha.sh && bash ./ganesha.sh
 ```
 #### TODO List:
 - [ ] Add comments.
